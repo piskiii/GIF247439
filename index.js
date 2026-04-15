@@ -110,6 +110,17 @@ app.post("/workouts/:workoutId/sets", async (req, res) => {
   }
 });
 
+app.get("/db-test", async (req, res) => {
+  try {
+    const pool = await getPool();
+    await pool.request().query("SELECT 1");
+    res.send("DB OK");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(err.message);
+  }
+});
+
 app.get("/users/:userId/workouts", async (req, res) => {
   const { userId } = req.params;
 
