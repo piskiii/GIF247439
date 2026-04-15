@@ -1,34 +1,77 @@
-# GIF247439
+# GIF247439 - Gym Progress Tracker
 
-Jednoduchá Node.js aplikace postavená na Expressu.
+Node.js aplikácia na zapisovanie tréningov, sérií a opakovaní s vizualizáciou progresu v grafoch.
 
-## Co aplikace umí
+## Funkcie
 
-- `GET /` vrací textovou odpověď `Hello from Azure App Service!`
-- `GET /health` vrací JSON `{"status":"ok"}`
+- login podľa `username` (ak neexistuje, používateľ sa vytvorí)
+- vytváranie tréningov
+- pridávanie sérií (`exercise`, `weight`, `reps`)
+- história tréningov
+- progres graf (max váha + objem podľa dátumu) pre vybraný cvik
 
-## Požadavky
+## Požiadavky
 
-- Node.js 18 nebo novější
+- Node.js 18+
 - npm
+- MSSQL databáza s tabuľkami `Users`, `Workouts`, `Sets`
 
-## Instalace
+## Inštalácia
 
 ```bash
 npm install
 ```
 
-## Spuštění
+## Nastavenie prostredia
+
+Pred spustením nastav tieto premenné:
+
+```bash
+export DB_USER="<db_user>"
+export DB_PASS="<db_password>"
+export DB_SERVER="<db_server>"
+export DB_NAME="<db_name>"
+export PORT="3000"
+```
+
+## Spustenie
 
 ```bash
 npm start
 ```
 
-Ve výchozím nastavení běží aplikace na portu `3000`. Port lze změnit přes proměnnou prostředí `PORT`.
+## Endpointy
 
-## Ověření
+- `POST /login` body: `{ "username": "meno" }`
+- `POST /workouts` body: `{ "user_id": 1, "date": "2026-04-15T18:30" }` (`date` je voliteľný)
+- `POST /workouts/:workoutId/sets` body: `{ "exercise": "Bench Press", "weight": 80, "reps": 8 }`
+- `GET /users/:userId/workouts`
+- `GET /users/:userId/exercises`
+- `GET /users/:userId/progress?exercise=Bench%20Press`
+- `GET /health`
 
-```bash
-curl http://localhost:3000/
-curl http://localhost:3000/health
+## SQL schéma (ak by si ju potreboval znovu vytvoriť)
+
+```sql
+CREATE TABLE Users (
+	id INT IDENTITY PRIMARY KEY,
+	username NVARCHAR(50) UNIQUE NOT NULL,
+	created_at DATETIME DEFAULT GETDATE()
+);
+
+CREATE TABLE Workouts (
+	id INT IDENTITY PRIMARY KEY,
+	user_id INT,
+	date DATETIME DEFAULT GETDATE(),
+	FOREIGN KEY (user_id) REFERENCES Users(id)
+);
+
+CREATE TABLE Sets (
+	id INT IDENTITY PRIMARY KEY,
+	workout_id INT,
+	exercise NVARCHAR(100),
+	weight FLOAT,
+	reps INT,
+	FOREIGN KEY (workout_id) REFERENCES Workouts(id)
+);
 ```
